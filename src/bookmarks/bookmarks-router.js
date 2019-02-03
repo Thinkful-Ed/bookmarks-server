@@ -3,16 +3,30 @@ const uuid = require('uuid/v4')
 const { isWebUri } = require('valid-url')
 const logger = require('../logger')
 const store = require('../store')
+const BookarksService = require('./bookmarks-service')
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
 
+const serializeBookmark = bookmark => ({
+  id: bookmark.id,
+  title: bookmark.title,
+  url: bookmark.url,
+  description: bookmark.description,
+  rating: Number(bookmark.rating),
+})
+
 bookmarksRouter
   .route('/bookmarks')
-  .get((req, res) => {
-    res.json(store.bookmarks)
+  .get((req, res, next) => {
+    BookarksService.getAllBookmarks(req.app.get('db'))
+      .then(bookmarks => {
+        res.json(bookmarks.map(serializeBookmark))
+      })
+      .catch(next)
   })
   .post(bodyParser, (req, res) => {
+    // TODO: update to use db
     for (const field of ['title', 'url', 'rating']) {
       if (!req.body[field]) {
         logger.error(`${field} is required`)
@@ -44,21 +58,22 @@ bookmarksRouter
 
 bookmarksRouter
   .route('/bookmarks/:bookmark_id')
-  .get((req, res) => {
+  .get((req, res, next) => {
     const { bookmark_id } = req.params
-
-    const bookmark = store.bookmarks.find(c => c.id == bookmark_id)
-
-    if (!bookmark) {
-      logger.error(`Bookmark with id ${bookmark_id} not found.`)
-      return res
-        .status(404)
-        .send('Bookmark Not Found')
-    }
-
-    res.json(bookmark)
+    BookarksService.getById(req.app.get('db'), bookmark_id)
+      .then(bookmark => {
+        if (!bookmark) {
+          logger.error(`Bookmark with id ${bookmark_id} not found.`)
+          return res.status(404).json({
+            error: { message: `Bookmark Not Found` }
+          })
+        }
+        res.json(serializeBookmark(bookmark))
+      })
+      .catch(next)
   })
   .delete((req, res) => {
+    // TODO: update to use db
     const { bookmark_id } = req.params
 
     const bookmarkIndex = store.bookmarks.findIndex(b => b.id === bookmark_id)
@@ -72,7 +87,7 @@ bookmarksRouter
 
     store.bookmarks.splice(bookmarkIndex, 1)
 
-    logger.info(`Card with id ${bookmark_id} deleted.`)
+    logger.info(`Bookmark with id ${bookmark_id} deleted.`)
     res
       .status(204)
       .end()

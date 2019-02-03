@@ -1,13 +1,33 @@
+const knex = require('knex')
+const fixtures = require('./bookmarks-fixtures')
 const app = require('../src/app')
+// TODO: remove when updating POST and DELETE
 const store = require('../src/store')
 
 describe('Bookmarks Endpoints', () => {
-  let bookmarksCopy
+  let bookmarksCopy, db
+
+  before('make knex instance', () => {
+    db = knex({
+      client: 'pg',
+      connection: process.env.TEST_DB_URL,
+    })
+    app.set('db', db)
+  })
+
+  after('disconnect from db', () => db.destroy())
+
+  before('cleanup', () => db('bookmarks').truncate())
+
+  afterEach('cleanup', () => db('bookmarks').truncate())
+
+  // TODO: refactor to use db when updating POST and DELETE
   beforeEach('copy the bookmarks', () => {
     // copy the bookmarks so we can restore them after testing
     bookmarksCopy = store.bookmarks.slice()
   })
 
+  // TODO: refactor to use db when updating POST and DELETE
   afterEach('restore the bookmarks', () => {
     // restore the bookmarks back to original
     store.bookmarks = bookmarksCopy
@@ -43,31 +63,66 @@ describe('Bookmarks Endpoints', () => {
   })
 
   describe('GET /bookmarks', () => {
-    it('gets the bookmarks from the store', () => {
-      return supertest(app)
-        .get('/bookmarks')
-        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(200, store.bookmarks)
+    context(`Given no bookmarks`, () => {
+      it(`responds with 200 and an empty list`, () => {
+        return supertest(app)
+          .get('/bookmarks')
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(200, [])
+      })
+    })
+
+    context('Given there are bookmarks in the database', () => {
+      const testBookmarks = fixtures.makeBookmarksArray()
+
+      beforeEach('insert bookmarks', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
+
+      it('gets the bookmarks from the store', () => {
+        return supertest(app)
+          .get('/bookmarks')
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(200, testBookmarks)
+      })
     })
   })
 
   describe('GET /bookmarks/:id', () => {
-    it('gets the bookmark by ID from the store', () => {
-      const secondBookmark = store.bookmarks[1]
-      return supertest(app)
-        .get(`/bookmarks/${secondBookmark.id}`)
-        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(200, secondBookmark)
+    context(`Given no bookmarks`, () => {
+      it(`responds 404 whe bookmark doesn't exist`, () => {
+        return supertest(app)
+          .get(`/bookmarks/123`)
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(404, {
+            error: { message: `Bookmark Not Found` }
+          })
+      })
     })
 
-    it(`returns 404 whe bookmark doesn't exist`, () => {
-      return supertest(app)
-        .get(`/bookmarks/doesnt-exist`)
-        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(404, 'Bookmark Not Found')
+    context('Given there are bookmarks in the database', () => {
+      const testBookmarks = fixtures.makeBookmarksArray()
+
+      beforeEach('insert bookmarks', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
+
+      it('responds with 200 and the specified bookmark', () => {
+        const bookmarkId = 2
+        const expectedBookmark = testBookmarks[bookmarkId - 1]
+        return supertest(app)
+          .get(`/bookmarks/${bookmarkId}`)
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(200, expectedBookmark)
+      })
     })
   })
 
+  // TODO: update to use db
   describe('DELETE /bookmarks/:id', () => {
     it('removes the bookmark by ID from the store', () => {
       const secondBookmark = store.bookmarks[1]
@@ -89,6 +144,7 @@ describe('Bookmarks Endpoints', () => {
     })
   })
 
+  // TODO: update to use db
   describe('POST /bookmarks', () => {
     it(`responds with 400 missing 'title' if not supplied`, () => {
       const newBookmarkMissingTitle = {
