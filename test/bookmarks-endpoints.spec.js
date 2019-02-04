@@ -207,7 +207,9 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkMissingTitle)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'title' is required`)
+        .expect(400, {
+          error: { message: `'title' is required` }
+        })
     })
 
     it(`responds with 400 missing 'url' if not supplied`, () => {
@@ -220,7 +222,9 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkMissingUrl)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'url' is required`)
+        .expect(400, {
+          error: { message: `'url' is required` }
+        })
     })
 
     it(`responds with 400 missing 'rating' if not supplied`, () => {
@@ -233,7 +237,9 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkMissingRating)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'rating' is required`)
+        .expect(400, {
+          error: { message: `'rating' is required` }
+        })
     })
 
     it(`responds with 400 invalid 'rating' if not between 0 and 5`, () => {
@@ -246,7 +252,9 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkInvalidRating)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'rating' must be a number between 0 and 5`)
+        .expect(400, {
+          error: { message: `'rating' must be a number between 0 and 5` }
+        })
     })
 
     it(`responds with 400 invalid 'url' if not a valid URL`, () => {
@@ -259,7 +267,9 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkInvalidUrl)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'url' must be a valid URL`)
+        .expect(400, {
+          error: { message: `'url' must be a valid URL` }
+        })
     })
 
     it('adds a new bookmark to the store', () => {

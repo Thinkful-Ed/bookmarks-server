@@ -28,7 +28,9 @@ bookmarksRouter
     for (const field of ['title', 'url', 'rating']) {
       if (!req.body[field]) {
         logger.error(`${field} is required`)
-        return res.status(400).send(`'${field}' is required`)
+        return res.status(400).send({
+          error: { message: `'${field}' is required` }
+        })
       }
     }
 
@@ -36,12 +38,16 @@ bookmarksRouter
 
     if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
       logger.error(`Invalid rating '${rating}' supplied`)
-      return res.status(400).send(`'rating' must be a number between 0 and 5`)
+      return res.status(400).send({
+        error: { message: `'rating' must be a number between 0 and 5` }
+      })
     }
 
     if (!isWebUri(url)) {
       logger.error(`Invalid url '${url}' supplied`)
-      return res.status(400).send(`'url' must be a valid URL`)
+      return res.status(400).send({
+        error: { message: `'url' must be a valid URL` }
+      })
     }
 
     const newBookmark = { title, url, description, rating }
@@ -51,7 +57,7 @@ bookmarksRouter
       newBookmark
     )
       .then(bookmark => {
-        logger.info(`Card with id ${bookmark.id} created.`)
+        logger.info(`Bookmark with id ${bookmark.id} created.`)
         res
           .status(201)
           .location(`/bookmarks/${bookmark.id}`)
@@ -76,7 +82,6 @@ bookmarksRouter
         next()
       })
       .catch(next)
-
   })
   .get((req, res) => {
     res.json(serializeBookmark(res.bookmark))
@@ -88,7 +93,7 @@ bookmarksRouter
       bookmark_id
     )
       .then(numRowsAffected => {
-        logger.info(`Card with id ${bookmark_id} deleted.`)
+        logger.info(`Bookmark with id ${bookmark_id} deleted.`)
         res.status(204).end()
       })
       .catch(next)
