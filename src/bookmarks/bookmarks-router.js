@@ -3,7 +3,7 @@ const uuid = require('uuid/v4')
 const { isWebUri } = require('valid-url')
 const logger = require('../logger')
 const store = require('../store')
-const BookarksService = require('./bookmarks-service')
+const BookmarksService = require('./bookmarks-service')
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
@@ -19,7 +19,7 @@ const serializeBookmark = bookmark => ({
 bookmarksRouter
   .route('/bookmarks')
   .get((req, res, next) => {
-    BookarksService.getAllBookmarks(req.app.get('db'))
+    BookmarksService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => {
         res.json(bookmarks.map(serializeBookmark))
       })
@@ -60,7 +60,7 @@ bookmarksRouter
   .route('/bookmarks/:bookmark_id')
   .get((req, res, next) => {
     const { bookmark_id } = req.params
-    BookarksService.getById(req.app.get('db'), bookmark_id)
+    BookmarksService.getById(req.app.get('db'), bookmark_id)
       .then(bookmark => {
         if (!bookmark) {
           logger.error(`Bookmark with id ${bookmark_id} not found.`)
