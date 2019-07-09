@@ -2,7 +2,7 @@ const path = require('path')
 const express = require('express')
 const xss = require('xss')
 const logger = require('../logger')
-const BookarksService = require('./bookmarks-service')
+const BookmarksService = require('./bookmarks-service')
 const { getBookmarkValidationError } = require('./bookmark-validator')
 
 const bookmarksRouter = express.Router()
@@ -20,7 +20,7 @@ bookmarksRouter
   .route('/')
 
   .get((req, res, next) => {
-    BookarksService.getAllBookmarks(req.app.get('db'))
+    BookmarksService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => {
         res.json(bookmarks.map(serializeBookmark))
       })
@@ -44,7 +44,7 @@ bookmarksRouter
 
     if (error) return res.status(400).send(error)
 
-    BookarksService.insertBookmark(
+    BookmarksService.insertBookmark(
       req.app.get('db'),
       newBookmark
     )
@@ -64,7 +64,7 @@ bookmarksRouter
 
   .all((req, res, next) => {
     const { bookmark_id } = req.params
-    BookarksService.getById(req.app.get('db'), bookmark_id)
+    BookmarksService.getById(req.app.get('db'), bookmark_id)
       .then(bookmark => {
         if (!bookmark) {
           logger.error(`Bookmark with id ${bookmark_id} not found.`)
@@ -86,7 +86,7 @@ bookmarksRouter
 
   .delete((req, res, next) => {
     const { bookmark_id } = req.params
-    BookarksService.deleteBookmark(
+    BookmarksService.deleteBookmark(
       req.app.get('db'),
       bookmark_id
     )
@@ -115,7 +115,7 @@ bookmarksRouter
 
     if (error) return res.status(400).send(error)
 
-    BookarksService.updateBookmark(
+    BookmarksService.updateBookmark(
       req.app.get('db'),
       req.params.bookmark_id,
       bookmarkToUpdate
