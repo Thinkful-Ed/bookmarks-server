@@ -2,7 +2,7 @@ const express = require('express')
 const { isWebUri } = require('valid-url')
 const xss = require('xss')
 const logger = require('../logger')
-const BookarksService = require('./bookmarks-service')
+const BookmarksService = require('./bookmarks-service')
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
@@ -18,7 +18,7 @@ const serializeBookmark = bookmark => ({
 bookmarksRouter
   .route('/bookmarks')
   .get((req, res, next) => {
-    BookarksService.getAllBookmarks(req.app.get('db'))
+    BookmarksService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => {
         res.json(bookmarks.map(serializeBookmark))
       })
@@ -54,7 +54,7 @@ bookmarksRouter
 
     const newBookmark = { title, url, description, rating }
 
-    BookarksService.insertBookmark(
+    BookmarksService.insertBookmark(
       req.app.get('db'),
       newBookmark
     )
@@ -72,7 +72,7 @@ bookmarksRouter
   .route('/bookmarks/:bookmark_id')
   .all((req, res, next) => {
     const { bookmark_id } = req.params
-    BookarksService.getById(req.app.get('db'), bookmark_id)
+    BookmarksService.getById(req.app.get('db'), bookmark_id)
       .then(bookmark => {
         if (!bookmark) {
           logger.error(`Bookmark with id ${bookmark_id} not found.`)
@@ -90,7 +90,7 @@ bookmarksRouter
   })
   .delete((req, res, next) => {
     const { bookmark_id } = req.params
-    BookarksService.deleteBookmark(
+    BookmarksService.deleteBookmark(
       req.app.get('db'),
       bookmark_id
     )
